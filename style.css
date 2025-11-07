@@ -1,0 +1,991 @@
+/* style.css */
+
+
+/* --- 1. ПЕРЕМЕННЫЕ И ГЛОБАЛЬНЫЕ СТИЛИ --- */
+:root {
+    --bg-color: #121212; --surface-color: #1e1e1e; --primary-color: #4CAF50; --secondary-color: #007BFF;
+    --danger-color: #D9534F; --warning-color: #f0ad4e; --disabled-color: #444; --text-color: #e0e0e0;
+    --border-color: #333; --header-bg: #2a2a2a; --font-monospace: 'Courier New', Courier, monospace;
+    --font-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font-sans-serif); background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; padding-top: 50px; }
+.container { max-width: 600px; margin: 1rem auto; padding: 1rem; background-color: var(--surface-color); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.hidden { display: none !important; }
+
+
+
+/* --- 2. СЕКЦИЯ ТАЙМЕРОВ И БЛОКИ ОТОБРАЖЕНИЯ --- */
+.timer-section { display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; margin-bottom: 1.5rem; }
+.app-title { color: var(--primary-color); font-size: 1.8rem; margin-bottom: 0.5rem; }
+.display-block { width: 100%; }
+
+
+.display-wrapper {
+    position: relative; /* База для наложения */
+    width: 100%;
+    height: 4.5rem; /* Высота по самому большому таймеру */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/*.timer-section{
+    position: relative;
+}*/
+
+
+.main-display { font-size: 3.5rem; font-family: var(--font-monospace); }
+
+
+.sub-display, .pause-display { font-size: 2.5rem; font-family: var(--font-monospace); }
+
+
+
+
+/* --- Стили для цвета таймера круга По умолчанию он сероватый */
+.sub-display {
+    color: #ccc;
+    transition: color 0.5s ease; /* Добавляем плавный переход цвета */
+}
+
+/* Применяем те же цвета, что и для полосы */
+.sub-display.good-pace { color: #5cb85c; }
+.sub-display.warning-yellow { color: #f0e68c; }
+.sub-display.warning-orange { color: var(--warning-color); }
+.sub-display.critical { color: var(--danger-color); }
+
+
+/* style.css */
+.pause-display {
+    font-size: 2.5rem;
+    font-family: var(--font-monospace);
+    color: var(--warning-color);
+    animation: blink 1.5s linear infinite;
+    margin-top: 0.5rem;
+    height: 2.5rem;
+    
+    /* --- КЛЮЧЕВЫЕ СВОЙСТВА --- */
+    opacity: 0; /* По умолчанию прозрачен */
+    transition: opacity 0.2s ease; /* Плавное появление */
+}
+
+/* Класс 'active' делает его видимым */
+.pause-display.active {
+    opacity: 1;
+}
+
+@keyframes blink { 50% { opacity: 0.3; } }
+
+
+
+/* --- 3. КНОПКИ-КЛОНЫ (OVERLAY) --- */
+/* Общий стиль для кнопок-клонов */
+.overlay-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    /* --- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ --- */
+    width: 220px;
+    height: 3rem;
+    z-index: 10;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px; /* Сделаем скругление как у контейнера */
+    
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease-in-out; /* Улучшаем анимацию */
+}
+
+/* Правила видимости */
+.overlay-btn:not(:disabled) { opacity: 0.4; pointer-events: auto; }
+.overlay-btn:hover:not(:disabled) { opacity: 0.8; background-color: rgba(255, 255, 255, 0.1); }
+
+/* --- СТИЛИ ДЛЯ ВСПЫШКИ --- */
+
+/* Класс, который мы будем добавлять на мгновение через JS */
+.overlay-btn.flash {
+    background-color: rgba(255, 0, 0, 0.5) !important; /* Яркая красная вспышка */
+    border-color: white !important;
+}
+
+
+.overlay-btn.hidden { opacity: 0; pointer-events: none; }
+
+
+/* Прячем кнопку, если она disabled */
+.overlay-btn[disabled] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+/*12 21 28 12*/
+#overlayStartStopBtn { top: 12rem; }
+#overlayLapBtn { top: 21rem; }
+#overlayPauseBtn { top: 28rem; }
+#overlayResetBtnMain { top: 12rem; }
+
+
+.pause-display.active ~ #overlayPauseBtn { opacity: 1; }
+
+
+
+/* --- 4. ПОЛОСЫ ПРОГРЕССА --- */
+.progress-bar-container { width: 100%; height: 16px; background-color: #222; border-radius: 8px; overflow: hidden; margin-top: 8px; }
+.progress-bar-fill { height: 100%; width: 0%; background-color: var(--secondary-color); border-radius: 8px; transition: width 0.2s linear, background-color 0.5s ease; }
+.progress-bar-fill.good-pace { background-color: #5cb85c; }
+.progress-bar-fill.warning-yellow { background-color: #f0e68c; }
+.progress-bar-fill.warning-orange { background-color: var(--warning-color); }
+.progress-bar-fill.critical { background-color: var(--danger-color); }
+
+
+
+/* --- 5. ОБЫЧНЫЕ КНОПКИ --- */
+
+.controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+#startStopBtn {
+    grid-column: 1 / -1;
+}
+
+.btn {
+    border: none;
+    border-radius: 5px;
+    padding: 12px;
+    font-size: 1rem;
+    color: white;
+    cursor: pointer;
+}
+
+.btn:disabled {
+    background-color: var(--disabled-color);
+    cursor: not-allowed;
+}
+
+.btn-primary { background-color: var(--primary-color); }
+.btn-secondary { background-color: var(--secondary-color); }
+.btn-danger { background-color: var(--danger-color); }
+.btn-warning { background-color: var(--warning-color); }
+
+
+
+/* --- 6. ВЕРХНЯЯ ПАНЕЛЬ И ПАНЕЛИ КОНТЕНТА --- */
+.app-header { position: fixed; top: 0; left: 0; width: 100%; height: 50px; background-color: var(--header-bg); box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; padding: 0 1rem; z-index: 1000; }
+.app-header nav { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.nav-center { position: absolute; left: 50%; transform: translateX(-50%); }
+.btn-nav { background: none; border: none; color: var(--text-color); font-size: 1rem; cursor: pointer; padding: 5px 10px; border-radius: 4px; transition: background-color 0.2s; }
+.panel { max-width: 600px; margin: 1rem auto; padding: 1.5rem; background-color: var(--surface-color); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; z-index: 20; }
+.panel h2 { text-align: center; margin-bottom: 1rem; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 100; display: flex; justify-content: center; align-items: center; }
+
+
+.modal-content {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    max-height: 80vh; /* Максимальная высота - 80% от высоты экрана */
+    overflow-y: auto; /* Добавить вертикальный скролл, если контент не помещается */
+}
+
+
+.btn-close { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; color: #888; cursor: pointer; }
+.summary-section { margin-top: 1.5rem; font-size: 0.9rem; color: #aaa; }
+.summary-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border-color); }
+.summary-item:last-child { border-bottom: none; }
+.table-container { max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; }
+.laps-table { width: 100%; border-collapse: collapse; text-align: center; }
+.laps-table th, .laps-table td { padding: 0.75rem; }
+.laps-table thead { background-color: #2a2a2a; position: sticky; top: 0; }
+.laps-table tbody tr { border-bottom: 1px solid var(--border-color); }
+.laps-table tbody tr:last-child { border-bottom: none; }
+.laps-table tbody tr:nth-child(even) { background-color: var(--surface-color); }
+.no-laps-message { text-align: center; padding: 1rem; color: #888; }
+.delta-positive { color: #5cb85c; font-weight: bold; } .delta-negative { color: #D9534F; font-weight: bold; }
+.input-group, .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; margin-bottom: 0.5rem; }
+input[type="number"], input[type="text"] { background-color: #333; color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; text-align: right; }
+input[type="number"] { width: 80px; } input[type="text"] { width: 150px; }
+.setting-item { border-top: 1px solid var(--border-color); }
+.toggle-switch { display: flex; align-items: center; gap: 0.5rem; }
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: var(--primary-color); }
+input:checked + .slider:before { transform: translateX(26px); }
+.slider.round { border-radius: 34px; } .slider.round:before { border-radius: 50%; }
+
+/* --- 7. СВЕТЛАЯ ТЕМА --- */
+body.light-theme { 
+    --bg-color: #f0f2f5; 
+    --surface-color: #ffffff; 
+    --text-color: #1c1e21; 
+    --border-color: #ddd; 
+    --header-bg: #e9ebee; }
+body.light-theme .btn-nav { 
+    color: var(--text-color); }
+body.light-theme .btn-nav:hover { 
+    background-color: rgba(0,0,0,0.1); }
+body.light-theme .btn-close { 
+    color: #888; }
+body.light-theme .overlay-btn { 
+  border-color: rgba(0,0,0,0.3); }
+body.light-theme .btn-primary {
+  background: #4a90e2;
+  color: white; }
+body.light-theme .btn-secondary {
+  background: #6c757d;
+  color: white; }
+body.light-theme .btn-outline {
+  background: transparent;
+  border: 2px solid #4a90e2;
+  color: #4a90e2; }
+body.light-theme .btn-outline:hover {
+  background: #4a90e2;
+  color: white; }
+
+body.light-theme input { 
+    background-color: #eee; }
+body.light-theme .laps-table thead { 
+    background-color: #f5f6f7; }
+body.light-theme .modal-content { 
+    color: var(--text-color); }
+
+
+/* layout.css */
+.progress-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 10px;
+    font-family: var(--font-monospace);
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.progress-wrapper .progress-bar-container {
+    flex-grow: 1; /* Полоса займет все свободное место */
+    margin: 0; /* Убираем старые отступы */
+}
+
+
+/* Стили для инструкции */
+.instructions-text {
+    margin-top: 1rem;
+    line-height: 1.7;
+}
+
+.instructions-text h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+}
+
+.instructions-text p {
+    margin-bottom: 0.75rem;
+}
+
+
+
+/* ========== ACCESSIBILITY ========== */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+
+
+/* ========== FOCUS STYLES ========== */
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+
+
+/* ========== FLASH ANIMATION ========== */
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; transform: scale(0.98); }
+}
+
+.flash {
+  animation: flash 150ms ease-in-out;
+}
+
+
+
+/* ========== LOADING SPINNER ========== */
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+}
+
+.loading::after {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+
+/* ========== PROGRESS BARS ========== */
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary, #4a90e2);
+  transition: width 0.2s linear, background-color 0.3s ease;
+  border-radius: inherit;
+}
+
+.progress-bar-fill.good-pace {
+  background: var(--color-success, #4caf50);
+}
+
+.progress-bar-fill.warning-yellow {
+  background: var(--color-warning, #ffc107);
+}
+
+.progress-bar-fill.warning-orange {
+  background: var(--color-warning-dark, #ff9800);
+}
+
+.progress-bar-fill.critical {
+  background: var(--color-danger, #f44336);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+
+
+/* ========== TIMER COLOR SYNC ========== */
+
+.main-display.good-pace,
+.sub-display.good-pace {
+  color: var(--color-success, #4caf50);
+}
+
+.main-display.warning-yellow,
+.sub-display.warning-yellow {
+  color: var(--color-warning, #ffc107);
+}
+
+.main-display.warning-orange,
+.sub-display.warning-orange {
+  color: var(--color-warning-dark, #ff9800);
+}
+
+.main-display.critical,
+.sub-display.critical {
+  color: var(--color-danger, #f44336);
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+
+
+/* ========== PAUSE TIMER ========== */
+
+.pause-display {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.pause-display.active {
+  opacity: 1;
+}
+
+
+
+/* ========== ERROR STATE ========== */
+
+.error {
+  color: var(--color-danger, #f44336);
+  text-align: center;
+  padding: 20px;
+}
+
+
+
+/* ========== MODAL ========== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: var(--bg-color, white);
+  padding: 30px;
+  border-radius: 8px;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+
+
+/* ========== COUNTDOWN OVERLAY ========== */
+
+.countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.countdown-overlay.hidden {
+  display: none;
+}
+
+.countdown-number {
+  font-size: 20vw;
+  font-weight: 700;
+  color: var(--color-primary, #4a90e2);
+  text-shadow: 0 0 30px rgba(74, 144, 226, 0.8);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.countdown-number.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Цвет для "СТАРТ" */
+.countdown-number:contains("START"),
+.countdown-number:contains("СТАРТ") {
+  color: var(--color-success, #4caf50);
+  text-shadow: 0 0 40px rgba(76, 175, 80, 0.8);
+}
+
+
+
+/* ========== AUDIO TOGGLE ========== */
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+}
+
+input:checked + .slider {
+  background-color: var(--color-primary, #4a90e2);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+input:focus-visible + .slider {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+
+
+/* ========== DISABLE TEXT SELECTION FOR TIMERS ========== */
+
+.main-display,
+.sub-display,
+.pause-display,
+#timer,
+#lapTimer,
+#pauseTimer,
+.countdown-number,
+.progress-wrapper span,
+#lapsDone,
+#lapsGoal,
+#currentLapNumber,
+#avgTimeForBar,
+#totalDistance,
+#totalAscent,
+#avgLapTime {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none; /* iOS Safari */
+}
+
+/* Также запретить для всех overlay-кнопок */
+.overlay-btn {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Общее правило для всех числовых данных */
+.timer-section,
+.summary-section {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+
+
+/* ========== SUMMARY SCREEN ========== */
+
+.summary-screen {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.summary-title {
+  text-align: center;
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: var(--color-success, #4caf50);
+}
+
+.summary-meta {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.summary-meta p {
+  margin: 5px 0;
+  font-size: 1.1em;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.summary-card h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.3em;
+  color: var(--color-primary, #4a90e2);
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 8px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-value {
+  font-weight: 600;
+  font-size: 1.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-best {
+  color: var(--color-success, #4caf50);
+}
+
+.stat-worst {
+  color: var(--color-warning, #ffc107);
+}
+
+.summary-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.summary-actions .btn {
+  min-width: 200px;
+}
+
+/* Кнопка "Назад" под таблицей */
+.table-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+  
+  .summary-actions .btn {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* Запрет выделения в таблице */
+.laps-table {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.laps-table td,
+.laps-table th {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+
+
+/* ========== CONFIRM DIALOG ========== */
+
+.confirm-dialog {
+  max-width: 500px;
+  text-align: center;
+}
+
+.confirm-message {
+  font-size: 1.2em;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.confirm-actions .btn {
+  min-width: 120px;
+}
+
+
+
+/* ========== BUTTON STATES ========== */
+
+button:active {
+  transform: scale(0.98);
+}
+
+
+
+/* Временно отключить клик на кнопках с долгим нажатием */
+.overlay-btn,
+#startStopBtn,
+#lapBtn {
+  cursor: pointer;
+}
+
+/* Индикация долгого нажатия */
+.overlay-btn:active,
+#startStopBtn:active,
+#lapBtn:active {
+  transform: scale(1);
+}
+
+
+
+/* ========== LONG PRESS PROGRESS — яркий, слева от кнопки ========== */
+
+
+/* Дополнительная яркость для разных цветов */
+.longpress-overlay[data-color="blue"] .longpress-progress circle {
+  stroke: #4a90e2;
+  filter: drop-shadow(0 0 12px #4a90e2);
+}
+
+.longpress-overlay[data-color="green"] .longpress-progress circle {
+  stroke: #4caf50;
+  filter: drop-shadow(0 0 12px #4caf50);
+}
+
+.longpress-overlay {
+  position: fixed; /* Fixed вместо absolute - не влияет на layout */
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  animation: progressFadeIn 0.2s ease-out forwards;
+  /* Позиция будет установлена через JS */
+}
+
+@keyframes progressFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.longpress-progress {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 15px currentColor) 
+          drop-shadow(0 0 25px currentColor);
+}
+
+.longpress-progress circle {
+  transition: stroke-dashoffset 0.016s linear;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+
+
+/* ========== SUMMARY SCREEN ========== */
+
+.summary-hint {
+  text-align: center;
+  margin-top: 30px;
+  padding: 15px;
+  background: rgba(74, 144, 226, 0.1);
+  border-radius: 8px;
+  font-size: 1.1em;
+  opacity: 0.8;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.summary-actions .btn {
+  min-width: 200px;
+}
+
+
+/* Тёмная тема (по умолчанию) */
+.btn-primary {
+  background: #4a90e2;
+  color: white;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid #4a90e2;
+  color: #4a90e2;
+}
+
+.btn-outline:hover {
+  background: #4a90e2;
+  color: white;
+}
+
+
+/* Для очень маленьких экранов (узкие телефоны) */
+@media (max-width: 400px) {
+  .longpress-overlay {
+    /* Переместить над кнопкой вместо слева */
+    left: 50%;
+    top: -90px;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* --- 8. АДАПТИВНОСТЬ --- */
+@media (max-width: 600px) {
+    .container, .panel { 
+        margin: 1rem; 
+        padding: 1rem; }
+    .main-display { 
+        font-size: 2.5rem; }
+}
+
+@media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+@media (max-width: 768px) {
+  .summary-actions .btn {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .longpress-overlay {
+    left: -110px;
+    width: 80px;
+    height: 80px;
+  }
+}
+
+
+
+/* ========== NO-SELECT (запрет выделения) ========== */
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Применить ко всем навигационным элементам */
+nav,
+.btn-nav,
+.app-title,
+.progress-wrapper,
+.time {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+

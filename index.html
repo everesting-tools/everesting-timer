@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Everesting Stopwatch</title>
+    <meta name="description" content="Секундомер и круги для Эверестинга: время, паузы, прогресс по кругам и набору высоты.">
+    <meta name="theme-color" content="#111111">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="metronome.css">
+    
+    <script 
+      src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"
+      integrity="sha512-LhccdVNGe2QMEfI3x4DVV3ckMRe36TfydKss6mJpdHjNFiV07dFpS2xzeZedptKZrwxfICJpez09iNioiSZ3hA=="
+      crossorigin="anonymous"
+      defer
+    ></script>
+</head>
+
+<body>
+    
+    <header class="app-header">
+        <nav aria-label="Главная навигация" class="no-select">
+            <a class="skip-link" href="#main">Пропустить к содержимому</a>
+            
+            <div class="nav-left">
+                <button 
+                  id="settingsBtn" 
+                  class="btn-nav no-select" 
+                  type="button"
+                  data-i18n="settings"
+                  aria-label="Настройки">Настройки</button>
+            </div>
+            <div class="nav-center">
+                <button 
+                  id="instructionsBtn" 
+                  class="btn-nav no-select" 
+                  type="button"
+                  data-i18n="instructions"
+                  aria-label="Инструкция">Инструкция</button>
+            </div>
+            <div class="nav-right">
+                <button 
+                  id="tableBtn" 
+                  class="btn-nav no-select" 
+                  type="button"
+                  data-i18n="table"
+                  aria-label="Таблица кругов">Таблица</button>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- ОСНОВНОЙ ЭКРАН -->
+    <div class="container">
+        
+        <main id="main" class="main-content">
+            
+            <!-- ТАЙМЕРЫ -->
+            <section class="timer-section" aria-labelledby="app-title">
+                <h1 id="app-title" class="app-title no-select" data-i18n="appTitle">
+                    Секундомер для Эверестинга
+                </h1>
+
+                <!-- Главный таймер -->
+                <div class="main-display">
+                    <time id="timer" class="time no-select" datetime="PT0S" aria-live="off">00:00</time>
+                </div>
+                
+                <button 
+                  id="overlayStartStopBtn" 
+                  class="overlay-btn" 
+                  type="button"
+                  data-i18n-aria-label="start"
+                  aria-label="Старт">
+                </button>
+                
+                <button 
+                  id="overlayResetBtnMain" 
+                  class="overlay-btn overlay-reset hidden" 
+                  type="button"
+                  data-i18n-aria-label="reset"
+                  aria-label="Сброс">
+                  <span class="visually-hidden" data-i18n="reset">Сброс</span>
+                </button>
+
+                <!-- Общий прогресс -->
+                <div class="progress-wrapper no-select" aria-label="Общий прогресс">
+                    <span id="lapsDone" aria-live="polite">0</span>
+                    <div class="progress-bar-container total-progress">
+                        <div 
+                          id="totalProgressBar" 
+                          class="progress-bar-fill"
+                          role="progressbar"
+                          aria-valuenow="0"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                          aria-label="Общий прогресс"></div>
+                    </div>
+                    <span id="lapsGoal">100</span>
+                </div>
+
+                <!-- Таймер круга -->
+                <div class="sub-display">
+                    <time id="lapTimer" class="time no-select" datetime="PT0S" aria-live="off">00:00</time>
+                </div>
+                <button 
+                  id="overlayLapBtn" 
+                  class="overlay-btn" 
+                  type="button"
+                  data-i18n-aria-label="lap"
+                  aria-label="Круг">
+                </button>
+                
+                <!-- Прогресс круга -->
+                <div class="progress-wrapper no-select" aria-label="Прогресс текущего круга">
+                    <span id="currentLapNumber" aria-live="polite">1</span>
+                    <div class="progress-bar-container">
+                        <div 
+                          id="lapProgressBar" 
+                          class="progress-bar-fill"
+                          role="progressbar"
+                          aria-valuenow="0"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                          aria-label="Прогресс текущего круга"></div>
+                    </div>
+                    <span id="avgTimeForBar">00:00</span>
+                </div>
+                
+                <!-- Таймер паузы -->
+                <div class="pause-display">
+                    <time id="pauseTimer" class="no-select" datetime="PT0S"></time>
+                </div>
+                <button 
+                  id="overlayPauseBtn" 
+                  class="overlay-btn" 
+                  type="button"
+                  data-i18n-aria-label="pause"
+                  aria-label="Пауза">
+                </button>
+            </section>
+
+            <!-- КНОПКИ (скрытые, для клавиатурной навигации) -->
+            <section class="controls-section visually-hidden" aria-label="Управление секундомером">
+                <div class="controls">
+                    <button id="startStopBtn" class="btn btn-primary" type="button" data-i18n="start">Старт</button>
+                    <button id="pauseBtn" class="btn btn-warning" type="button" data-i18n="pause" disabled>Пауза</button>
+                    <button id="lapBtn" class="btn btn-secondary" type="button" data-i18n="lap" disabled>Круг</button>
+                    <button id="resetBtn" class="btn btn-danger" type="button" data-i18n="reset" disabled>Сброс</button>
+                </div>
+            </section>
+
+            <!-- ИТОГИ УДАЛЕНЫ С ГЛАВНОГО ЭКРАНА -->
+            
+        </main>
+    </div>
+    
+    <!-- ПАНЕЛЬ НАСТРОЕК -->
+    <div id="settingsPanel" class="panel hidden">
+        <h2 data-i18n="settings">Настройки</h2>
+        
+        <div class="input-group">
+            <label for="userName" data-i18n="userNameLabel">Имя:</label>
+            <input 
+              type="text" 
+              id="userName" 
+              data-i18n-placeholder="userNameLabel"
+              placeholder="Ваше имя">
+        </div>
+        
+        <div class="input-group">
+            <label for="trackName" data-i18n="trackNameLabel">Трасса:</label>
+            <input 
+              type="text" 
+              id="trackName" 
+              data-i18n-placeholder="trackNameLabel"
+              placeholder="Название трассы">
+        </div>
+        
+        <div class="input-group">
+            <label for="goalLaps" data-i18n="goalLapsLabel">Цель (круги):</label>
+            <input 
+              type="number" 
+              id="goalLaps" 
+              value="100"
+              min="1"
+              step="1"
+              inputmode="numeric">
+        </div>
+        
+        <div class="input-group">
+            <label for="distance" data-i18n="distancePerLap">Дистанция круга (км):</label>
+            <input 
+              type="number" 
+              id="distance" 
+              value="10" 
+              min="0"
+              step="0.1"
+              inputmode="decimal">
+        </div>
+        
+        <div class="input-group">
+            <label for="ascent" data-i18n="ascentPerLap">Подъем круга (м):</label>
+            <input 
+              type="number" 
+              id="ascent" 
+              value="100" 
+              min="0"
+              step="1"
+              inputmode="numeric">
+        </div>
+        
+        <div class="setting-item">
+            <label data-i18n="theme">Тема:</label>
+            <div class="toggle-switch">
+                <span data-i18n="light">Светлая</span>
+                <label class="switch">
+                    <input 
+                      type="checkbox" 
+                      id="themeToggle" 
+                      role="switch"
+                      aria-checked="true"
+                      checked>
+                    <span class="slider round"></span>
+                </label>
+                <span data-i18n="dark">Темная</span>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <label data-i18n="language">Язык:</label>
+            <div class="toggle-switch">
+                <span>EN</span>
+                <label class="switch">
+                    <input 
+                      type="checkbox" 
+                      id="langToggle" 
+                      role="switch"
+                      aria-checked="true"
+                      checked>
+                    <span class="slider round"></span>
+                </label>
+                <span>RU</span>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <label data-i18n="audioLabel">Звук:</label>
+            <div class="toggle-switch">
+                <span data-i18n="off">Выкл.</span>
+                <label class="switch">
+                    <input 
+                      type="checkbox" 
+                      id="audioToggle" 
+                      role="switch"
+                      aria-checked="true"
+                      checked>
+                    <span class="slider round"></span>
+                </label>
+                <span data-i18n="on">Вкл.</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ПАНЕЛЬ ТАБЛИЦЫ -->
+    <div id="tablePanel" class="panel hidden" data-view="laps">
+        <h2 data-i18n="laps">Круги</h2>
+        <div class="table-container">
+            <table class="laps-table no-select">
+                <caption class="visually-hidden" data-i18n="laps">Круги</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" data-i18n="lapColumn">Круг</th>
+                        <th scope="col" data-i18n="totalTimeColumn">Общее время</th>
+                        <th scope="col" data-i18n="lapTimeColumn">Время круга</th>
+                        <th scope="col">+/-</th>
+                        <th scope="col" data-i18n="pausesColumn">Время пауз</th>
+                    </tr>
+                </thead>
+                <tbody id="laps"></tbody>
+            </table>
+        </div>
+        <div id="noLapsMessage" class="no-laps-message" data-i18n="noLapsYet">Кругов еще нет.</div>
+    </div>
+    
+    <!-- МОДАЛЬНОЕ ОКНО ИНСТРУКЦИИ -->
+    <div id="instructionsPanel" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 data-i18n="instr_title">Инструкция</h2>
+            <div id="instructionsContent" class="instructions-text"></div>
+        </div>
+    </div>
+    
+    <!-- МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
+    <div id="confirmModal" class="modal-overlay hidden">
+      <div class="modal-content confirm-dialog">
+        <p id="confirmMessage" class="confirm-message"></p>
+        <div class="confirm-actions">
+          <button id="confirmYesBtn" class="btn btn-danger" type="button" data-i18n="yes">Да</button>
+          <button id="confirmNoBtn" class="btn btn-secondary" type="button" data-i18n="no">Нет</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ОВЕРЛЕЙ ОБРАТНОГО ОТСЧЁТА -->
+    <div id="countdownOverlay" class="countdown-overlay hidden">
+        <div id="countdownNumber" class="countdown-number"></div>
+    </div>
+    
+        <!-- АУДИО ДЛЯ МЕТРОНОМА -->
+    <audio id="sound1" src="./sounds/metronome-85688.mp3" preload="auto"></audio>
+    <audio id="sound2" src="./sounds/botw_link_climb11.mp3" preload="auto"></audio>
+    <audio id="sound3" src="./sounds/botw_link_attack9.mp3" preload="auto"></audio>
+    <audio id="sound4" src="https://webaudioplayground.appspot.com/sounds/tick.mp3" preload="auto"></audio>
+    
+    <!-- ПАНЕЛЬ МЕТРОНОМА -->
+    <div id="metronome-panel">
+        <div id="panel-handle" title="Показать/скрыть панель"></div>
+        <div class="panel-content">
+            <div class="controls">
+                <button id="decrease-bpm" class="control-button" title="Уменьшить каденс">-</button>
+                <button id="play-pause-button" class="control-button" title="Старт/Стоп">
+                    <span id="bpm-value">90</span>
+                    <span id="play-pause-label">Старт</span>
+                </button>
+                <button id="increase-bpm" class="control-button" title="Увеличить каденс">+</button>
+            </div>
+
+            <div id="settings">
+                <div class="setting-item">
+                    <label for="min-bpm">Мин. каденс:</label>
+                    <input type="number" id="min-bpm" value="60">
+                </div>
+                <div class="setting-item">
+                    <label for="max-bpm">Макс. каденс:</label>
+                    <input type="number" id="max-bpm" value="120">
+                </div>
+                <div class="setting-item">
+                    <label>Режим (обороты / ноги):</label>
+                    <label class="switch">
+                        <input type="checkbox" id="mode-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label id="sound1-label" for="sound1-select">Звук (1 оборот):</label>
+                    <select id="sound1-select">
+                        <option value="sound1" selected>Щелчок (High-hat)</option>
+                        <option value="sound4">Тик</option>
+                        <option value="sound2">Электронный (Blip)</option>
+                        <option value="sound3">Колокольчик (Cowbell)</option>
+                    </select>
+                </div>
+                <div id="second-sound-setting" class="setting-item">
+                    <label for="sound2-select">Звук (правая нога):</label>
+                    <select id="sound2-select">
+                        <option value="sound4" selected>Тик</option>
+                        <option value="sound1">Щелчок (High-hat)</option>
+                        <option value="sound2">Электронный (Blip)</option>
+                        <option value="sound3">Колокольчик (Cowbell)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="main.js" type="module"></script>
+    <script src="metronome.js"></script>
+</body>
+</html>

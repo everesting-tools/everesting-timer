@@ -6,7 +6,6 @@
 import Timer from './timer.js';
 import * as data from './data.js';
 import * as ui from './ui.js';
-import * as ui_tables from './ui_tables.js';
 import * as i18n from './i18n.js';
 import audio from './audio.js';
 import longPress from './longpress.js';
